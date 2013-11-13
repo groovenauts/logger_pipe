@@ -28,7 +28,7 @@ module LoggerPipe
         Timeout.timeout( @timeout || DEFAULT_TIMEOUT ) do
 
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
-          com = IO.popen("#{cmd} 2>&1") do |com|
+          com = IO.popen(cmd) do |com|
             pid = com.pid
             while line = com.gets
               buf << line
