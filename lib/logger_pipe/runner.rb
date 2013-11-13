@@ -5,6 +5,9 @@ require "timeout"
 
 module LoggerPipe
 
+  class Failure < StandardError
+  end
+
   class Runner
     DEFAULT_TIMEOUT = 60
 
@@ -33,12 +36,12 @@ module LoggerPipe
             end
           end
           if $?.exitstatus == 0
-            logger.info("%s\n\e[32mSUCCESS: %s\e[0m" % [buf.join.strip, cmd])
+            logger.info("\e[32mSUCCESS: %s\e[0m" % [cmd])
             return buf.join
           else
-            msg = "\e[31mFAILURE: %s\n%s\e[0m" % [cmd, buf.join.strip]
+            msg = "\e[31mFAILURE: %s\e[0m" % [cmd]
             logger.error(msg)
-            raise Error, msg
+            raise Failure, msg
           end
 
         end
