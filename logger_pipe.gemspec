@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = LoggerPipe::VERSION
   spec.authors       = ["akima"]
   spec.email         = ["akm2000@gmail.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
+  spec.description   = %q{logger_pipe helps to connect child process STDOUT to Logger on realtime}
+  spec.summary       = %q{logger_pipe helps to connect child process STDOUT to Logger on realtime}
+  spec.homepage      = "https://github.com/groovenauts/logger_pipe"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
