@@ -52,6 +52,16 @@ describe LoggerPipe do
         msg.lines[1].should =~ /Foo: /
         msg.lines[2].should =~ /FAILURE: date \+'Foo: /
       end
+
+      it "returns buffer from LoggerPipe::Failure" do
+        begin
+          LoggerPipe.run(logger, cmd)
+          fail
+        rescue LoggerPipe::Failure => e
+          expect(e.buffer).to be_a(Array)
+          expect(e.buffer.first).to match(/\AFoo: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+        end
+      end
     end
 
 

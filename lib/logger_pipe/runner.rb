@@ -6,6 +6,11 @@ require "timeout"
 module LoggerPipe
 
   class Failure < StandardError
+    attr_reader :buffer
+    def initialize(msg, buffer)
+      super(msg)
+      @buffer = buffer
+    end
   end
 
   class Runner
@@ -41,7 +46,7 @@ module LoggerPipe
           else
             msg = "\e[31mFAILURE: %s\e[0m" % [cmd]
             logger.error(msg)
-            raise Failure, msg
+            raise Failure.new(msg, buf)
           end
 
         end
