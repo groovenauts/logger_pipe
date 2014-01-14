@@ -14,8 +14,6 @@ module LoggerPipe
   end
 
   class Runner
-    DEFAULT_TIMEOUT = 60
-
     attr_accessor :logger, :cmd, :timeout
 
     def initialize(logger, cmd, options = {})
@@ -30,7 +28,7 @@ module LoggerPipe
       # see http://docs.ruby-lang.org/ja/2.0.0/class/Timeout.html
       com, pid = nil, nil
       begin
-        Timeout.timeout( @timeout || DEFAULT_TIMEOUT ) do
+        Timeout.timeout( @timeout ) do
 
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
           com = IO.popen(cmd) do |com|
