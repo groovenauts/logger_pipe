@@ -19,9 +19,14 @@ module LoggerPipe
     def initialize(logger, cmd, options = {})
       @logger, @cmd = logger, cmd
       @timeout = options[:timeout]
+      @dry_run = options[:dry_run]
     end
 
     def execute
+      if @dry_run
+        logger.info("dry run: #{cmd}")
+        return nil
+      end
       logger.info("executing: #{cmd}")
       buf = []
       # systemをタイムアウトさせることはできないので、popenの戻り値を使っています。

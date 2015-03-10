@@ -37,6 +37,21 @@ describe LoggerPipe do
       end
     end
 
+    context "dry_run: true" do
+      let(:cmd){ "date +'Foo: %Y-%m-%dT%H:%M:%S'; sleep 1; date +'Bar: %Y-%m-%dT%H:%M:%S'" }
+      it "returns nil" do
+        res = LoggerPipe.run(logger, cmd, dry_run: true)
+        expect(res).to eq nil
+      end
+
+      it "logging output" do
+        LoggerPipe.run(logger, cmd, dry_run: true)
+        msg = buffer.string
+        expect(msg.lines.length).to eq 1
+        expect(msg.lines[0]).to match /dry run: #{Regexp.escape(cmd)}/
+      end
+    end
+
     context "failure" do
       let(:cmd){ "date +'Foo: %Y-%m-%dT%H:%M:%S'; #{RbConfig.ruby} -e 'exit(1)'" }
 
