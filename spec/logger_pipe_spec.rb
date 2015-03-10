@@ -7,7 +7,7 @@ require 'timeout'
 
 describe LoggerPipe do
   it 'should have a version number' do
-    LoggerPipe::VERSION.should_not be_nil
+    expect(LoggerPipe::VERSION).to_not be_nil
   end
 
   let(:buffer){ StringIO.new }
@@ -20,20 +20,20 @@ describe LoggerPipe do
       let(:cmd){ "date +'Foo: %Y-%m-%dT%H:%M:%S'; sleep 1; date +'Bar: %Y-%m-%dT%H:%M:%S'" }
       it "returns STDOUT" do
         res = LoggerPipe.run(logger, cmd)
-        res.should_not == ""
-        res.lines.length.should == 2
-        res.lines[0].should =~ /Foo: /
-        res.lines[1].should =~ /Bar: /
+        expect(res).to_not eq ""
+        expect(res.lines.length).to eq 2
+        expect(res.lines[0]).to match /Foo: /
+        expect(res.lines[1]).to match /Bar: /
       end
 
       it "logging output" do
         LoggerPipe.run(logger, cmd)
         msg = buffer.string
-        msg.lines.length.should == 4
-        msg.lines[0].should =~ /executing: #{Regexp.escape(cmd)}/
-        msg.lines[1].should =~ /Foo: /
-        msg.lines[2].should =~ /Bar: /
-        msg.lines[3].should =~ /SUCCESS: #{Regexp.escape(cmd)}/
+        expect(msg.lines.length).to eq 4
+        expect(msg.lines[0]).to match /executing: #{Regexp.escape(cmd)}/
+        expect(msg.lines[1]).to match /Foo: /
+        expect(msg.lines[2]).to match /Bar: /
+        expect(msg.lines[3]).to match /SUCCESS: #{Regexp.escape(cmd)}/
       end
     end
 
@@ -47,10 +47,10 @@ describe LoggerPipe do
       it "failure" do
         LoggerPipe.run(logger, cmd) rescue nil
         msg = buffer.string
-        msg.lines.length.should == 3
-        msg.lines[0].should =~ /executing: #{Regexp.escape(cmd)}/
-        msg.lines[1].should =~ /Foo: /
-        msg.lines[2].should =~ /FAILURE: date \+'Foo: /
+        expect(msg.lines.length).to eq 3
+        expect(msg.lines[0]).to match /executing: #{Regexp.escape(cmd)}/
+        expect(msg.lines[1]).to match /Foo: /
+        expect(msg.lines[2]).to match /FAILURE: date \+'Foo: /
       end
 
       it "returns buffer from LoggerPipe::Failure" do
@@ -75,10 +75,10 @@ describe LoggerPipe do
       it "failure" do
         LoggerPipe.run(logger, cmd, timeout: 3) rescue nil
         msg = buffer.string
-        msg.lines[0].should =~ /executing: #{Regexp.escape(cmd)}/
-        msg.lines[1].should =~ /Foo: /
-        msg.lines[2].should =~ /now killing process/
-        msg.lines.any?{|line| line =~ /EXECUTION Timeout/}.should == true
+        expect(msg.lines[0]).to match /executing: #{Regexp.escape(cmd)}/
+        expect(msg.lines[1]).to match /Foo: /
+        expect(msg.lines[2]).to match /now killing process/
+        expect(msg.lines.any?{|line| line =~ /EXECUTION Timeout/}).to eq true
       end
     end
 
