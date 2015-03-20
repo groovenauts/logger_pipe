@@ -40,7 +40,7 @@ module LoggerPipe
             pid = com.pid
             while line = com.gets
               buf << line
-              logger.info(line.chomp)
+              logger.debug(line.chomp)
             end
           end
           if $?.exitstatus == 0
