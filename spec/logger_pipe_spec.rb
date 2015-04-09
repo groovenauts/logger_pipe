@@ -42,16 +42,17 @@ describe LoggerPipe do
       let(:cmd){ File.expand_path("../stderr_test.sh", __FILE__) }
       it "returns STDOUT on success" do
         res = LoggerPipe.run(logger, "#{cmd} 0")
+        # puts buffer.string
+        expect(buffer.string).to match /bar\n/
         expect(res).to eq "foo\nbaz\n"
       end
 
       it "buffer include stderr content on error" do
-        begin
+        expect{
           LoggerPipe.run(logger, "#{cmd} 1")
-          fail
-        rescue LoggerPipe::Failure => e
-          expect(e.buffer).to eq ["foo\n", "baz\n", "bar\n"] # ["foo", "bar", "baz"]でないことに注意
-        end
+        }.to raise_error(LoggerPipe::Failure)
+        # puts buffer.string
+        expect(buffer.string).to match /bar\n/
       end
     end
 

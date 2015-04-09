@@ -2,6 +2,7 @@
 require "logger_pipe"
 
 require "timeout"
+require 'tempfile'
 
 module LoggerPipe
 
@@ -32,10 +33,11 @@ module LoggerPipe
       # systemをタイムアウトさせることはできないので、popenの戻り値を使っています。
       # see http://docs.ruby-lang.org/ja/2.0.0/class/Timeout.html
       @com, @pid = nil, nil
-      timeout do
+      stderr_buffer do |stderr_fp|
+        timeout do
 
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
-          @com = IO.popen(cmd) do |com|
+          @com = IO.popen("#{cmd} 2> #{stderr_fp.path}") do |com|
             @com = com
             @pid = com.pid
             while line = com.gets
@@ -44,14 +46,17 @@ module LoggerPipe
             end
           end
           if $?.exitstatus == 0
+            logging_stderr(stderr_fp)
             logger.info("\e[32mSUCCESS: %s\e[0m" % [cmd])
             return @buf.join
           else
+            logging_stderr(stderr_fp)
             msg = "\e[31mFAILURE: %s\e[0m" % [cmd]
             logger.error(msg)
             raise Failure.new(msg, @buf)
           end
 
+        end
       end
     end
 
@@ -83,6 +88,20 @@ module LoggerPipe
       end
     end
 
+    def stderr_buffer
+      Tempfile.open("logger_pipe.stderr.log") do |f|
+        f.close
+        return block_given? ? yield(f) : nil
+      end
+    end
+
+    def logging_stderr(f)
+      f.open
+      c = f.read
+      if !c.nil? && !c.empty?
+        logger.info("--- begin stderr ---\n#{c}\n--- end stderr ---")
+      end
+    end
   end
 
 end
