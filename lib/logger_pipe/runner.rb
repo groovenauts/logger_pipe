@@ -28,32 +28,36 @@ module LoggerPipe
         return nil
       end
       logger.info("executing: #{cmd}")
-      buf = []
+      @buf = []
       # systemをタイムアウトさせることはできないので、popenの戻り値を使っています。
       # see http://docs.ruby-lang.org/ja/2.0.0/class/Timeout.html
       @com, @pid = nil, nil
-      begin
-        Timeout.timeout( @timeout ) do
+      timeout do
 
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
           @com = IO.popen(cmd) do |com|
             @com = com
             @pid = com.pid
             while line = com.gets
-              buf << line
+              @buf << line
               logger.debug(line.chomp)
             end
           end
           if $?.exitstatus == 0
             logger.info("\e[32mSUCCESS: %s\e[0m" % [cmd])
-            return buf.join
+            return @buf.join
           else
             msg = "\e[31mFAILURE: %s\e[0m" % [cmd]
             logger.error(msg)
-            raise Failure.new(msg, buf)
+            raise Failure.new(msg, @buf)
           end
 
-        end
+      end
+    end
+
+    def timeout(&block)
+      begin
+        Timeout.timeout(@timeout, &block)
       rescue Timeout::Error => e
         logger.error("[#{e.class.name} #{e.message}] now killing process pid:#{@pid.inspect}: #{cmd}")
         begin
@@ -70,7 +74,7 @@ module LoggerPipe
           result = "<failure to get result>"
         end
         begin
-          msg = "\e[31mEXECUTION Timeout: %s\e[0m\n%s\n[result]: %s" % [cmd, buf.join.strip, result]
+          msg = "\e[31mEXECUTION Timeout: %s\e[0m\n%s\n[result]: %s" % [cmd, @buf.join.strip, result]
           logger.error(msg)
         rescue Exception => err
           logger.error("[#{err.class.name}] #{err.message}")
