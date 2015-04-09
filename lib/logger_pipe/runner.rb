@@ -31,13 +31,14 @@ module LoggerPipe
       buf = []
       # systemをタイムアウトさせることはできないので、popenの戻り値を使っています。
       # see http://docs.ruby-lang.org/ja/2.0.0/class/Timeout.html
-      com, pid = nil, nil
+      @com, @pid = nil, nil
       begin
         Timeout.timeout( @timeout ) do
 
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
-          com = IO.popen(cmd) do |com|
-            pid = com.pid
+          @com = IO.popen(cmd) do |com|
+            @com = com
+            @pid = com.pid
             while line = com.gets
               buf << line
               logger.debug(line.chomp)
@@ -54,15 +55,15 @@ module LoggerPipe
 
         end
       rescue Timeout::Error => e
-        logger.error("[#{e.class.name} #{e.message}] now killing process #{pid}: #{cmd}")
+        logger.error("[#{e.class.name} #{e.message}] now killing process pid:#{@pid.inspect}: #{cmd}")
         begin
-          Process.kill('SIGINT', pid) if pid
+          Process.kill('SIGINT', @pid) if @pid
         rescue Exception => err
           logger.error("[#{err.class.name}] #{err.message}")
         end
         begin
           Timeout.timeout(10) do
-            result = com.read
+            result = @com.read
           end
         rescue Exception => err
           logger.error("failure to get result [#{err.class.name}] #{err.message}")
