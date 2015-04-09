@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'spec_helper'
 
 require 'stringio'
@@ -34,6 +35,23 @@ describe LoggerPipe do
         expect(msg.lines[1]).to match /Foo: /
         expect(msg.lines[2]).to match /Bar: /
         expect(msg.lines[3]).to match /SUCCESS: #{Regexp.escape(cmd)}/
+      end
+    end
+
+    context "stderr" do
+      let(:cmd){ File.expand_path("../stderr_test.sh", __FILE__) }
+      it "returns STDOUT on success" do
+        res = LoggerPipe.run(logger, "#{cmd} 0")
+        expect(res).to eq "foo\nbaz\n"
+      end
+
+      it "buffer include stderr content on error" do
+        begin
+          LoggerPipe.run(logger, "#{cmd} 1")
+          fail
+        rescue LoggerPipe::Failure => e
+          expect(e.buffer).to eq ["foo\n", "baz\n", "bar\n"] # ["foo", "bar", "baz"]でないことに注意
+        end
       end
     end
 
