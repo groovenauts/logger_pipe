@@ -112,16 +112,8 @@ module LoggerPipe
           f.close
           actual_cmd =
             case returns
-            when :stdout then
-              case logging
-              when :stderr then "#{cmd} 2>#{f.path}"
-              when :both   then "#{cmd} 2>#{f.path}"
-              end
-            when :stderr then
-              case logging
-              when :stdout then "#{cmd} 2>&1 1>#{f.path}"
-              when :both   then "#{cmd} 2>&1 1>#{f.path}"
-              end
+            when :stdout then "#{cmd} 2>#{f.path}"
+            when :stderr then "#{cmd} 2>&1 1>#{f.path}"
             end
           begin
             return block_given? ? yield(actual_cmd, logging == :both) : nil
