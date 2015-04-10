@@ -38,7 +38,7 @@ describe LoggerPipe do
       end
     end
 
-    context "stderr" do
+    context "stderr" do # default options are {return: :stdout, logging: :both}
       let(:cmd){ File.expand_path("../stderr_test.sh", __FILE__) }
       it "returns STDOUT on success" do
         res = LoggerPipe.run(logger, "#{cmd} 0")
@@ -56,6 +56,53 @@ describe LoggerPipe do
       end
     end
 
+    context ":return and :logging" do
+      {
+        [:nil   , :nil   ] => [nil, {foo: false, bar: false, baz: false}],
+        [:nil   , :stdout] => [nil, {foo: true , bar: false, baz: true }],
+        [:nil   , :stderr] => [nil, {foo: false, bar: true , baz: false}],
+        [:nil   , :both  ] => [nil, {foo: true , bar: true , baz: true }],
+        [:stdout, :nil   ] => ["foo\nbaz\n", {foo: false, bar: false, baz: false}],
+        [:stdout, :stdout] => ["foo\nbaz\n", {foo: true , bar: false, baz: true }],
+        [:stdout, :stderr] => ["foo\nbaz\n", {foo: false, bar: true , baz: false}],
+        [:stdout, :both  ] => ["foo\nbaz\n", {foo: true , bar: true , baz: true }],
+        [:stderr, :nil   ] => ["bar\n"     , {foo: false, bar: false, baz: false}],
+        [:stderr, :stdout] => ["bar\n"     , {foo: true , bar: false, baz: true }],
+        [:stderr, :stderr] => ["bar\n"     , {foo: false, bar: true , baz: false}],
+        [:stderr, :both  ] => ["bar\n"     , {foo: true , bar: true , baz: true }],
+        [:both  , :nil   ] => ["foo\nbar\nbaz\n", {foo: false, bar: false, baz: false}],
+        [:both  , :stdout] => ["foo\nbar\nbaz\n", {foo: true , bar: false, baz: true }],
+        [:both  , :stderr] => ["foo\nbar\nbaz\n", {foo: false, bar: true , baz: false}],
+        [:both  , :both  ] => ["foo\nbar\nbaz\n", {foo: true , bar: true , baz: true }],
+      }.each do |options_values, expected|
+        options = {
+          returns: options_values.first,
+          logging: options_values.last,
+        }
+        context options do
+          let(:cmd){ File.expand_path("../stderr_test.sh", __FILE__) }
+          it "returns STDOUT on success" do
+            res = LoggerPipe.run(logger, "#{cmd} 0", options)
+            expect(res).to eq expected.first
+            expected.last.each do |key, value|
+              m = value ? :to : :to_not
+              expect(buffer.string).send(m, match(/#{key}\n/))
+            end
+          end
+
+          it "buffer include stderr content on error" do
+            expect{
+              LoggerPipe.run(logger, "#{cmd} 1")
+            }.to raise_error(LoggerPipe::Failure)
+            # puts buffer.string
+            expect(buffer.string).to match /bar\n/
+          end
+        end
+
+      end
+    end
+
+    
     context "dry_run: true" do
       let(:cmd){ "date +'Foo: %Y-%m-%dT%H:%M:%S'; sleep 1; date +'Bar: %Y-%m-%dT%H:%M:%S'" }
       it "returns nil" do

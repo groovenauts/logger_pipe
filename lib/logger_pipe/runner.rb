@@ -21,6 +21,8 @@ module LoggerPipe
       @logger, @cmd = logger, cmd
       @timeout = options[:timeout]
       @dry_run = options[:dry_run]
+      @return_from = options[:returns] || :stdout # :nil, :stdout, :stderr, :both
+      @logging_from = options[:logging] || :both # :nil, :stdout, :stderr, :both
     end
 
     def execute
