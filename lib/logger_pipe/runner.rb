@@ -16,11 +16,14 @@ module LoggerPipe
 
   class Runner
     attr_accessor :logger, :cmd, :timeout
+    attr_accessor :returns, :logging
 
     def initialize(logger, cmd, options = {})
       @logger, @cmd = logger, cmd
       @timeout = options[:timeout]
       @dry_run = options[:dry_run]
+      @returns = options[:returns] || :stdout # :none, :stdout, :stderr, :both
+      @logging = options[:logging] || :both   # :none, :stdout, :stderr, :both
     end
 
     def execute
@@ -28,35 +31,33 @@ module LoggerPipe
         logger.info("dry run: #{cmd}")
         return nil
       end
-      logger.info("executing: #{cmd}")
       @buf = []
       # systemをタイムアウトさせることはできないので、popenの戻り値を使っています。
       # see http://docs.ruby-lang.org/ja/2.0.0/class/Timeout.html
       @com, @pid = nil, nil
-      stderr_buffer do |stderr_fp|
-        timeout do
+      setup do |actual_cmd, log_enable|
+        logger.info("executing: #{actual_cmd}")
 
+        timeout do
           # popenにブロックを渡さないと$?がnilになってしまうので敢えてブロックで処理しています。
-          @com = IO.popen("#{cmd} 2> #{stderr_fp.path}") do |com|
+          @com = IO.popen(actual_cmd) do |com|
             @com = com
             @pid = com.pid
             while line = com.gets
               @buf << line
-              logger.debug(line.chomp)
+              logger.debug(line.chomp) if log_enable
             end
           end
           if $?.exitstatus == 0
-            logging_stderr(stderr_fp)
-            logger.info("\e[32mSUCCESS: %s\e[0m" % [cmd])
-            return @buf.join
+            logger.info("\e[32mSUCCESS: %s\e[0m" % [actual_cmd])
+            return (returns == :none) ? nil : @buf.join
           else
-            logging_stderr(stderr_fp)
-            msg = "\e[31mFAILURE: %s\e[0m" % [cmd]
+            msg = "\e[31mFAILURE: %s\e[0m" % [actual_cmd]
             logger.error(msg)
             raise Failure.new(msg, @buf)
           end
-
         end
+
       end
     end
 
@@ -88,19 +89,46 @@ module LoggerPipe
       end
     end
 
-    def stderr_buffer
-      Tempfile.open("logger_pipe.stderr.log") do |f|
-        f.close
-        return block_given? ? yield(f) : nil
+    def setup
+      raise ArgumentError, "Invalid option :returns #{returns.inspect}" unless SOURCES.include?(returns)
+      raise ArgumentError, "Invalid option :logging #{logging.inspect}" unless SOURCES.include?(logging)
+      if (returns == :both) && ([:stdout, :stderr].include?(logging))
+        raise ArgumentError, "Can' set logging: #{logging.inspect} with returns: #{returns.inspect}"
+      elsif (returns == :none) || (logging == :none) || (returns == logging)
+        actual_cmd =
+          case logging
+          when :none    then
+            case returns
+            when :none   then "#{cmd} 1>/dev/null 2>/dev/null"
+            when :stdout then "#{cmd} 2>/dev/null"
+            when :stderr then "#{cmd} 2>&1 1>/dev/null"
+            when :both   then "#{cmd} 2>&1"
+            end
+          when :stdout then "#{cmd} 2>/dev/null"
+          when :stderr then "#{cmd} 2>&1 1>/dev/null"
+          when :both   then "#{cmd} 2>&1"
+          end
+        return block_given? ? yield(actual_cmd, logging != :none) : nil
+      else
+        Tempfile.open("logger_pipe.stderr.log") do |f|
+          f.close
+          actual_cmd =
+            case returns
+            when :stdout then "#{cmd} 2>#{f.path}"
+            when :stderr then "#{cmd} 2>&1 1>#{f.path}"
+            end
+          begin
+            return block_given? ? yield(actual_cmd, logging == :both) : nil
+          ensure
+            logging_subfile(f)
+          end
+        end
       end
     end
 
-    def logging_stderr(f)
+    def logging_subfile(f)
       f.open
-      c = f.read
-      if !c.nil? && !c.empty?
-        logger.info("--- begin stderr ---\n#{c}\n--- end stderr ---")
-      end
+      logger.info("--- begin stderr ---\n%s\n--- end stderr ---" % f.read)
     end
   end
 
