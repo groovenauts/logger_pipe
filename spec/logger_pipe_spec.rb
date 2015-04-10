@@ -56,8 +56,9 @@ describe LoggerPipe do
       end
     end
 
-    context ":return and :logging" do
+    context ":returns and :logging" do
       {
+        # [:returns, :logging] => [return of LoggerPipe.run, logging expectations]
         [:nil   , :nil   ] => [nil              , {foo: false, bar: false, baz: false}], # OK
         [:nil   , :stdout] => [nil              , {foo: true , bar: false, baz: true }], # OK
         [:nil   , :stderr] => [nil              , {foo: false, bar: true , baz: false}], # OK
