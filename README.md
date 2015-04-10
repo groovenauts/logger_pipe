@@ -1,4 +1,4 @@
-# LoggerPipe
+# LoggerPipe [![Build Status](https://travis-ci.org/groovenauts/logger_pipe.svg)](https://travis-ci.org/groovenauts/logger_pipe)
 
 TODO: Write a gem description
 
