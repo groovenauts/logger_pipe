@@ -22,8 +22,8 @@ module LoggerPipe
       @logger, @cmd = logger, cmd
       @timeout = options[:timeout]
       @dry_run = options[:dry_run]
-      @returns = options[:returns] || :stdout # :nil, :stdout, :stderr, :both
-      @logging = options[:logging] || :both   # :nil, :stdout, :stderr, :both
+      @returns = options[:returns] || :stdout # :none, :stdout, :stderr, :both
+      @logging = options[:logging] || :both   # :none, :stdout, :stderr, :both
     end
 
     def execute
@@ -50,7 +50,7 @@ module LoggerPipe
           end
           if $?.exitstatus == 0
             logger.info("\e[32mSUCCESS: %s\e[0m" % [actual_cmd])
-            return (returns == :nil) ? nil : @buf.join
+            return (returns == :none) ? nil : @buf.join
           else
             msg = "\e[31mFAILURE: %s\e[0m" % [actual_cmd]
             logger.error(msg)
@@ -94,12 +94,12 @@ module LoggerPipe
       raise ArgumentError, "Invalid option :logging #{logging.inspect}" unless SOURCES.include?(logging)
       if (returns == :both) && ([:stdout, :stderr].include?(logging))
         raise ArgumentError, "Can' set logging: #{logging.inspect} with returns: #{returns.inspect}"
-      elsif (returns == :nil) || (logging == :nil) || (returns == logging)
+      elsif (returns == :none) || (logging == :none) || (returns == logging)
         actual_cmd =
           case logging
-          when :nil    then
+          when :none    then
             case returns
-            when :nil    then "#{cmd} 1>/dev/null 2>/dev/null"
+            when :none   then "#{cmd} 1>/dev/null 2>/dev/null"
             when :stdout then "#{cmd} 2>/dev/null"
             when :stderr then "#{cmd} 2>&1 1>/dev/null"
             when :both   then "#{cmd} 2>&1"
@@ -108,7 +108,7 @@ module LoggerPipe
           when :stderr then "#{cmd} 2>&1 1>/dev/null"
           when :both   then "#{cmd} 2>&1"
           end
-        return block_given? ? yield(actual_cmd, logging != :nil) : nil
+        return block_given? ? yield(actual_cmd, logging != :none) : nil
       else
         Tempfile.open("logger_pipe.stderr.log") do |f|
           f.close

@@ -59,21 +59,21 @@ describe LoggerPipe do
     context ":returns and :logging" do
       {
         # [:returns, :logging] => [return of LoggerPipe.run, logging expectations]
-        [:nil   , :nil   ] => [nil              , {foo: false, bar: false, baz: false}], # OK
-        [:nil   , :stdout] => [nil              , {foo: true , bar: false, baz: true }], # OK
-        [:nil   , :stderr] => [nil              , {foo: false, bar: true , baz: false}], # OK
-        [:nil   , :both  ] => [nil              , {foo: true , bar: true , baz: true }], # OK
-        [:stdout, :nil   ] => ["foo\nbaz\n"     , {foo: false, bar: false, baz: false}], # OK
+        [:none  , :none  ] => [nil              , {foo: false, bar: false, baz: false}], # OK
+        [:none  , :stdout] => [nil              , {foo: true , bar: false, baz: true }], # OK
+        [:none  , :stderr] => [nil              , {foo: false, bar: true , baz: false}], # OK
+        [:none  , :both  ] => [nil              , {foo: true , bar: true , baz: true }], # OK
+        [:stdout, :none  ] => ["foo\nbaz\n"     , {foo: false, bar: false, baz: false}], # OK
         [:stdout, :stdout] => ["foo\nbaz\n"     , {foo: true , bar: false, baz: true }], # BINGO
         [:stdout, :stderr] => ["foo\nbaz\n"     , {foo: false, bar: true , baz: false}], # NOT REALTIME
         [:stdout, :both  ] => ["foo\nbaz\n"     , {foo: true , bar: true , baz: true }], # NOT REALTIME # DEFAULT
-        [:stderr, :nil   ] => ["bar\n"          , {foo: false, bar: false, baz: false}], # OK
+        [:stderr, :none  ] => ["bar\n"          , {foo: false, bar: false, baz: false}], # OK
         [:stderr, :stdout] => ["bar\n"          , {foo: true , bar: false, baz: true }], # NOT REALTIME
         [:stderr, :stderr] => ["bar\n"          , {foo: false, bar: true , baz: false}], # BINGO
         [:stderr, :both  ] => ["bar\n"          , {foo: true , bar: true , baz: true }], # NOT REALTIME
-        [:both  , :nil   ] => ["foo\nbar\nbaz\n", {foo: false, bar: false, baz: false}], # OK
-        [:wrong , :nil   ] => :invalid,
-        [:nil   , :wrong ] => :invalid,
+        [:both  , :none  ] => ["foo\nbar\nbaz\n", {foo: false, bar: false, baz: false}], # OK
+        [:wrong , :none  ] => :invalid,
+        [:none  , :wrong ] => :invalid,
         [:both  , :stdout] => :invalid,
         [:both  , :stderr] => :invalid,
         [:both  , :both  ] => ["foo\nbar\nbaz\n", {foo: true , bar: true , baz: true }], # BINGO
