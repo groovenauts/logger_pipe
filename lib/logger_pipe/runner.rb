@@ -23,7 +23,7 @@ module LoggerPipe
       @timeout = options[:timeout]
       @dry_run = options[:dry_run]
       @returns = options[:returns] || :stdout # :nil, :stdout, :stderr, :both
-      @logging = options[:logging] || :both # :nil, :stdout, :stderr, :both
+      @logging = options[:logging] || :both   # :nil, :stdout, :stderr, :both
     end
 
     def execute
@@ -90,6 +90,8 @@ module LoggerPipe
     end
 
     def setup
+      raise ArgumentError, "Invalid option :returns #{returns.inspect}" unless SOURCES.include?(returns)
+      raise ArgumentError, "Invalid option :logging #{logging.inspect}" unless SOURCES.include?(logging)
       if (returns == :both) && ([:stdout, :stderr].include?(logging))
         raise ArgumentError, "Can' set logging: #{logging.inspect} with returns: #{returns.inspect}"
       elsif (returns == :nil) || (logging == :nil) || (returns == logging)

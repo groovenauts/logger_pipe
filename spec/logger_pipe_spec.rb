@@ -72,6 +72,8 @@ describe LoggerPipe do
         [:stderr, :stderr] => ["bar\n"          , {foo: false, bar: true , baz: false}], # BINGO
         [:stderr, :both  ] => ["bar\n"          , {foo: true , bar: true , baz: true }], # NOT REALTIME
         [:both  , :nil   ] => ["foo\nbar\nbaz\n", {foo: false, bar: false, baz: false}], # OK
+        [:wrong , :nil   ] => :invalid,
+        [:nil   , :wrong ] => :invalid,
         [:both  , :stdout] => :invalid,
         [:both  , :stderr] => :invalid,
         [:both  , :both  ] => ["foo\nbar\nbaz\n", {foo: true , bar: true , baz: true }], # BINGO
