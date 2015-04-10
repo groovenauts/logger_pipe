@@ -30,7 +30,7 @@ describe LoggerPipe do
       it "logging output" do
         LoggerPipe.run(logger, cmd)
         msg = buffer.string
-        expect(msg.lines.length).to eq 4
+        expect(msg.lines.length).to be >= 4
         expect(msg.lines[0]).to match /executing: #{Regexp.escape(cmd)}/
         expect(msg.lines[1]).to match /Foo: /
         expect(msg.lines[2]).to match /Bar: /
@@ -108,7 +108,7 @@ describe LoggerPipe do
       end
     end
 
-    
+
     context "dry_run: true" do
       let(:cmd){ "date +'Foo: %Y-%m-%dT%H:%M:%S'; sleep 1; date +'Bar: %Y-%m-%dT%H:%M:%S'" }
       it "returns nil" do
@@ -134,7 +134,7 @@ describe LoggerPipe do
       it "failure" do
         LoggerPipe.run(logger, cmd) rescue nil
         msg = buffer.string
-        expect(msg.lines.length).to eq 3
+        expect(msg.lines.length).to be >= 3
         expect(msg.lines[0]).to match /executing: #{Regexp.escape(cmd)}/
         expect(msg.lines[1]).to match /Foo: /
         expect(msg.lines[2]).to match /FAILURE: date \+'Foo: /

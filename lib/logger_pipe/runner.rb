@@ -126,10 +126,7 @@ module LoggerPipe
 
     def logging_subfile(f)
       f.open
-      c = f.read
-      if !c.nil? && !c.empty?
-        logger.info("--- begin stderr ---\n#{c}\n--- end stderr ---")
-      end
+      logger.info("--- begin stderr ---\n%s\n--- end stderr ---" % f.read)
     end
   end
 
